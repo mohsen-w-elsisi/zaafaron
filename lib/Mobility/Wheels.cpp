@@ -33,7 +33,7 @@ public:
         updateMotor2(HIGH, LOW);
     }
 
-    void brake()
+    void stop()
     {
         updateMotor1(LOW, LOW);
         updateMotor2(LOW, LOW);

@@ -36,7 +36,7 @@ public:
         return calcDistance(roundTripTime);
     }
 
-    bool ready()
+    bool ready() const
     {
         return (millis() - lastMeasurement) > SONAR_MEASURMENT_REST;
     }

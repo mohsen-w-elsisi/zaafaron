@@ -1,18 +1,12 @@
 #include <Arduino.h>
 #include <Sonar.cpp>
 #include <Mobility.cpp>
-
-#define IN1 2
-#define IN2 3
-
-#define IN3 4
-#define IN4 5
-
-#define TRIG_PIN 6
-#define ECHO_PIN 7
+#include "pins.cpp"
 
 Wheels wheels(IN1, IN2, IN3, IN4);
-Sonar sonar(TRIG_PIN, ECHO_PIN);
+Sonar sonar(SONAR_TRIG_PIN, SONAR_ECHO_PIN);
+Servo pathScannerMotor;
+PathScanner pathScanner(pathScannerMotor, sonar);
 
 void setup()
 {
@@ -23,21 +17,50 @@ void setup()
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
 
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
+  pinMode(SONAR_TRIG_PIN, OUTPUT);
+  pinMode(SONAR_ECHO_PIN, INPUT);
+
+  pathScannerMotor.attach(FRONT_SONAR_MOTOR);
 }
 
-void avoidBarrier()
+void avoidObsticle()
 {
-  wheels.brake();
+  wheels.stop();
 
-  wheels.forward();
+  Serial.println("Path is blocked");
+  Serial.println("Starting Scan...");
+  int bestAngle = pathScanner.findBestUnblockedPath();
+  Serial.print("Found path at angle: ");
+  Serial.println(bestAngle);
+
+  if (bestAngle == 90)
+  {
+    Serial.println("path is no longer blockled");
+  }
+  else if (bestAngle > 90)
+  {
+    Serial.println("turingi right");
+    wheels.right();
+    delay(300);
+  }
+  else
+  {
+    Serial.println("turingi left");
+    wheels.left();
+    delay(300);
+  }
 }
 
 void loop()
 {
-  if (!sonar.ready())
-    return;
-  if (sonar.measure() <= 0.15)
-    avoidBarrier();
+
+  if (pathScanner.pathIsBlocked())
+  {
+    avoidObsticle();
+  }
+  else
+  {
+    Serial.println("Path is clear");
+    wheels.forward();
+  }
 }
